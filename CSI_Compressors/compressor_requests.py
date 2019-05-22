@@ -1,8 +1,8 @@
 import requests
 
 def get_cookies():
-    user = 'PDCWESTREG'
-    pwd = 'PDCenergy!!8'
+    user = ''
+    pwd = ''
     sessionName, sessionId = get_cookie_session()
     fixation = get_cookie_fixation(sessionName, sessionId, user, pwd)
     cookies = get_cookie_homepage(sessionName, sessionId, fixation)
