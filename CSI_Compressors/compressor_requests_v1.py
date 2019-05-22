@@ -32,8 +32,8 @@ r = compressor_requests_v1.get(url, headers=headers, cookies=cookies)
 
 #####################################################################################
 #####################################################################################
-user = 'PDCWESTREG'
-pwd = 'PDCenergy!!8'
+user = ''
+pwd = ''
 url = 'https://csi.m2mops.com/Components/Security/UserLoginProcessSysReqs.asp'
 headers = {
     'Accept': 'text/html,application/xhtml+xml,application/xml;q=0.9,image/webp,image/apng,*/*;q=0.8,application/signed-exchange;v=b3',
