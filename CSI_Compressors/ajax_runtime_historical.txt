@@ -1,0 +1,113 @@
+function fcnGetAssetRuntime(AssetId) {
+	var validated = true;
+	var strStartDate = document.getElementById("strStartDate").value;
+	var strStartTime = document.getElementById("txtStartTime").value;
+	var strEndDate = document.getElementById("strEndDate").value;
+	var strEndTime = document.getElementById("txtEndTime").value;
+	strCurrSort = document.getElementById("SortBy").options[document.getElementById("SortBy").selectedIndex].value;
+	strStartDate = strStartDate + " " + strStartTime;
+	strEndDate = strEndDate + " " + strEndTime;
+	var strMsg = "";
+	//Compare the start date/time and end date time and don't allow the start to be in the future.
+	var objStartDate = Date.parse(strStartDate);
+	var objEndDate = Date.parse(strEndDate);
+	if(objStartDate > objEndDate){
+		strMsg += "Please select a Start Date & Time that is earlier than the End Date & Time";
+		strMsg += "<br><br><input id='' name='' type='button' class='button' style='width:60px;cursor:pointer;' onClick='fcnClosePopup();' onMouseOver='this.className=\"buttonhover\"' onMouseOut='this.className=\"button\"' value='Close'/>";
+		fcnPopulateChartPopup(strMsg,"Error",false,"#000000");
+		validated = false;
+	}
+	if(validated) {
+		var strPostString = "StartDate=" + fcnPrepForPost(strStartDate);
+		strPostString += "&EndDate=" + fcnPrepForPost(strEndDate);
+		strPostString += "&AssetId=" + AssetId;
+		strPostString += "&ShowRunning=" + document.getElementById("ShowRunning").checked;
+		strPostString += "&ShowUnitInfo=" + document.getElementById("ShowUnitInfo").checked;
+		strPostString += "&TimeZoneId=" + document.getElementById("Timezone").options[document.getElementById("Timezone").selectedIndex].value;
+		strPostString += "&strSort=" + strCurrSort;
+		strPostString += "&MId=16";
+		
+		fcnWipeInternalArrays(arrChartSeries);
+		fcnWipeInternalArrays(arrSeriesLabels);
+		fcnWipeInternalArrays(arrSeriesDataPoints);
+		fcnWipeInternalArrays(arrSeriesColors);
+		
+		fcnPopulateChartPopup("Loading Unit Runtime...","Please Wait",true,"#000000");
+		var m2mGetXML = new M2MAjax();
+		m2mGetXML.AjaxPost(strXMLDataSource + "?returnType=BUILD_ASSETRUNTIME" + "&ran=" + new Date(), strPostString, fcnLoadChartData, "XMLDOM");
+	}	
+}
+
+this.makeAjaxRequest = function() {
+		var self = null;
+		var req = null;
+		var headArr = [];	//start with empty header array each instanciation
+	
+		if (!this.init()) {
+			alert('An Error Has Occurred: Could Not Create XMLHttpRequest Object.');
+			return;
+		}
+		req = this.request;
+		req.open(this.method, this.url, this.async);
+		
+		if (this.method == "POST") {
+			this.request.setRequestHeader('Content-Type', 'application/x-www-form-urlencoded');
+		}
+		if (this.method == "POST") {
+			req.setRequestHeader('Content-Type', 'application/x-www-form-urlencoded');
+		}
+		
+		self = this;	//deals with loss of scope in javascript classes
+		
+		req.onreadystatechange = function() {
+			var resp = null;
+			self.readyState = req.readyState;
+			if (req.readyState == 4) {
+				//load all variables regardless of the type
+				self.status = req.status;
+				self.statusText = req.statusText;
+				self.responseText = req.responseText;
+				self.responseXML = req.responseXML;
+		
+				//store the correct response by the chosen format
+				switch((self.responseFormat).toUpperCase()) {
+					case 'TEXT':
+						resp = self.responseText;
+						break;
+					case 'XML':
+						resp = self.responseXML;
+						break;
+					case 'XMLDOM':
+						if (moz) {
+							var parser=new DOMParser();
+							self.respXMLDOM = parser.parseFromString(self.responseText,"text/xml");
+						} else if(ie) {
+							self.respXMLDOM.load(self.responseXML);
+						} 
+						resp = self.respXMLDOM;
+						break;
+					case 'OBJECT':
+						resp = req;
+						break;
+				}
+				
+				//All status values between 200 and 299 are considered valid'
+				
+				if((self.responseFormat).toUpperCase() == "XMLDOM" && moz && resp.getElementsByTagName("parsererror").length>0){
+						self.handleError(resp);
+				}else if((self.responseFormat).toUpperCase() == "XMLDOM" && ie && resp.parseError != 0) {
+						self.handleError(resp);
+				} else if (self.status > 199 && self.status < 300) {
+					if (!self.handleResponse) {
+						if(!ie) console.log("M2MAjax: No handler defined");
+						return;
+					} else {
+						self.handleResponse(resp);
+					}
+				} else {
+					self.handleError(resp);
+				}
+			}
+		}
+		req.send(this.dataPayload);
+	};
